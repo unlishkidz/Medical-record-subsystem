@@ -1,102 +1,226 @@
-# How to Run Tests - Step by Step Guide
+# How to Run Tests - Complete Guide
 
-## Method 1: Simple Windows Batch (Recommended for Windows Users)
-
-### Step 1: Open Command Prompt or PowerShell
-1. Press `Win + R` to open Run dialog
-2. Type `cmd` or `powershell` and press Enter
-3. you should see a terminal window
-
-### Step 2: Navigate to Project Folder
-```powershell
-cd C:\xampp\htdocs\Medical-record-subsystem
-```
-
-You should see:
-```
-PS C:\xampp\htdocs\Medical-record-subsystem>
-```
-
-### Step 3: Run the Tests
-```powershell
-.\run_tests.bat
-```
-
-Or just double-click `run_tests.bat` in the file explorer
-
-### Step 4: View Results
-The test results will appear in the terminal showing:
-```
-✓ PASS: Test name
-✗ FAIL: Test name
-⊘ SKIP: Test name
-```
-
-And a summary at the end:
-```
-=== TEST SUMMARY ===
-Passed:  12 ✓
-Failed:  0 ✗
-Skipped: 1 ⊘
-Total:   13
-```
+See also: [QUICK_TEST_GUIDE.md](QUICK_TEST_GUIDE.md) for a quick reference.
 
 ---
 
-## Method 2: Using PHP Directly (Advanced)
+## Method 1: Simple Windows Batch (⭐ Recommended)
 
-### Step 1: Open PowerShell or Command Prompt
-Press `Win + R`, type `powershell`, press Enter
+The easiest way to run all tests.
+
+### Step 1: Open File Explorer
+Navigate to your project folder:
+```
+C:\xampp\htdocs\Medical-record-subsystem
+```
+
+### Step 2: Double-Click run_tests.bat
+That's it! The test results will display in a terminal window.
+
+**Alternative:** Right-click `run_tests.bat` → Open with → Command Prompt
+
+---
+
+## Method 2: PowerShell Terminal
+
+### Step 1: Open PowerShell
+- Press `Win + R`
+- Type `powershell`, press Enter
 
 ### Step 2: Navigate to Project
 ```powershell
 cd C:\xampp\htdocs\Medical-record-subsystem
 ```
 
-### Step 3: Run Tests with XAMPP PHP
+### Step 3: Run Tests
+```powershell
+.\run_tests.bat
+```
+
+Or run PHP directly:
 ```powershell
 C:\xampp\php\php.exe run_tests.php
 ```
 
-### Step 4: Read the Output
-Wait for all tests to complete and review the results
-
 ---
 
-## Method 3: Using VS Code Terminal
+## Method 3: VS Code Terminal (Best for Developers)
 
 ### Step 1: Open VS Code
-Open the project folder in VS Code
+Open the project folder in Visual Studio Code
 
-### Step 2: Open Terminal
-- Click menu: `Terminal` > `New Terminal`
-- Or press `Ctrl + backtick` (the key above Tab)
+### Step 2: Open Integrated Terminal
+- Menu: `Terminal` → `New Terminal`
+- Or press: `Ctrl + ` (backtick key, above Tab)
 
-### Step 3: You're Already in Project Folder
-The terminal should show:
+### Step 3: Terminal Opens in Project Folder
+You should see:
 ```
 PS C:\xampp\htdocs\Medical-record-subsystem>
 ```
 
 ### Step 4: Run Tests
 ```powershell
-C:\xampp\php\php.exe run_tests.php
-```
-
-Or:
-```powershell
 .\run_tests.bat
 ```
 
 ---
 
-## Understanding Test Output
+## Reading Test Output
 
-### Passing Test
+### Each Test Line Shows Status
+
 ```
 ✓ PASS: PHP version compatibility
 ```
-Everything is working ✓
+✅ Test succeeded
+
+```
+✗ FAIL: Database connection
+```
+❌ Test failed - see error message below it
+
+```
+⊘ SKIP: Sample patients exist
+```
+⏭️ Test was skipped (usually optional data)
+
+---
+
+## Test Summary
+
+After all tests complete, you'll see:
+
+```
+=== TEST SUMMARY ===
+Passed:  13 ✓
+Failed:  0 ✗
+Skipped: 1 ⊘
+Total:   14
+```
+
+**Exit Code 0:** All tests passed ✓  
+**Exit Code 1:** Some tests failed ✗
+
+---
+
+## PHP Unit Tests (Advanced)
+
+If you have PHPUnit installed, run specific test suites:
+
+```bash
+# Install PHPUnit first
+composer require --dev phpunit/phpunit
+
+# Run all PHP tests
+./vendor/bin/phpunit
+
+# Run only unit tests
+./vendor/bin/phpunit tests/unit
+
+# Run only integration tests
+./vendor/bin/phpunit tests/integration
+
+# Run with coverage report
+./vendor/bin/phpunit --coverage-html coverage/
+```
+
+---
+
+## JavaScript Tests (Advanced)
+
+If you have Jest installed, run JavaScript tests:
+
+```bash
+# Install Jest first
+npm install --save-dev jest @babel/preset-env babel-jest
+
+# Run all JavaScript tests
+npm test
+
+# Watch mode (reruns on file changes)
+npm test -- --watch
+
+# Generate coverage report
+npm test -- --coverage
+```
+
+---
+
+## Troubleshooting
+
+### Issue: "PHP not found"
+**Cause:** PHP path is incorrect in `run_tests.bat`
+
+**Fix:**
+1. Open `run_tests.bat` in a text editor
+2. Check the PHP path matches your XAMPP installation
+3. If XAMPP is at `C:\xampp`, it should work as-is
+4. If elsewhere, update the path
+
+### Issue: "MySQL connection failed"
+**Cause:** MySQL is not running
+
+**Fix:**
+1. Open XAMPP Control Panel
+2. Click "Start" for MySQL
+3. Wait for it to turn green
+4. Run tests again
+
+### Issue: "Database patient_records_db does not exist"
+**Cause:** Database not created with sample data
+
+**Fix:**
+```bash
+# Create database and tables
+mysql -u root < database.sql
+```
+
+Or using phpMyAdmin:
+1. Go to `http://localhost/phpmyadmin`
+2. Create new database: `patient_records_db`
+3. Import file: `database.sql`
+
+### Issue: Tests pass intermittently
+**Cause:** Database not properly configured
+
+**Fix:**
+1. Verify `config.php` settings match your MySQL setup
+2. Ensure database credentials are correct
+3. Check that all tables were created
+
+### Issue: "Permission denied"
+**Cause:** Run tests from PowerShell as Administrator
+
+**Fix:**
+1. Right-click PowerShell → "Run as administrator"
+2. Run: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+3. Confirm with `Y`
+4. Run tests again
+
+---
+
+## Best Practices
+
+✅ **DO:**
+- Run tests before committing code
+- Keep tests database separate from production
+- Run tests regularly during development
+- Use watch mode for JavaScript tests during development
+
+❌ **DON'T:**
+- Run tests as root/administrator unless necessary
+- Modify tests database structure manually
+- Rely on test results with MySQL stopped
+- Ignore test failures
+
+---
+
+## Additional Resources
+
+- [QUICK_TEST_GUIDE.md](QUICK_TEST_GUIDE.md) - Quick reference
+- [README.md](README.md) - Main documentation
+- [tests/README.md](tests/README.md) - Test structure
 
 ### Failing Test
 ```

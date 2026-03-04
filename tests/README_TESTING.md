@@ -1,103 +1,165 @@
-# Medical Record System - Testing Guide
+# Testing Guide - Quick Reference
 
-## Quick Start
+For complete testing documentation, see:
+- **[TESTING_HOW_TO.md](../TESTING_HOW_TO.md)** - Step-by-step guide
+- **[README.md](./README.md)** - Test structure and setup
+- **[QUICK_TEST_GUIDE.md](../QUICK_TEST_GUIDE.md)** - 30-second quick start
 
-### Run All Tests (Windows)
-```batch
-run_tests.bat
+---
+
+## 🚀 Quick Start
+
+### Windows (Recommended)
+```powershell
+.\run_tests.bat
 ```
 
-### Run PHP Tests Directly
-```bash
-# Using XAMPP PHP
+### PowerShell
+```powershell
 C:\xampp\php\php.exe run_tests.php
-
-# Or from Git Bash/WSL
-php run_tests.php
 ```
 
-## Test Structure
+### VS Code Terminal
+```powershell
+Ctrl + ` (open terminal)
+.\run_tests.bat
+```
 
-### Available Tests
+---
 
-1. **Database Connection Tests**
-   - Verifies database connectivity
-   - Checks if required tables exist
-   - Validates sample data is loaded
+## 📋 Available Test Suites
 
-2. **API Endpoint Tests**
-   - Checks if all API files are present
-   - Validates API structure
+### 1. Quick Test (Custom Tests)
+Validates project setup and dependencies.
 
-3. **Configuration Tests**
-   - Verifies database configuration
-   - Checks required constants
+```powershell
+.\run_tests.bat
+# or
+C:\xampp\php\php.exe run_tests.php
+```
 
-4. **Frontend Tests**
-   - Validates HTML, CSS, and JavaScript files exist
-   - Checks file integrity
+**What it checks:**
+- ✓ PHP version (7.4+)
+- ✓ Database connection
+- ✓ Required tables exist
+- ✓ API files present
+- ✓ Configuration set
+- ✓ Frontend files present
 
-## Test Results
+### 2. PHPUnit (PHP Tests)
+Unit and integration testing for backend.
 
-Tests output a summary in the format:
+```bash
+composer install
+./vendor/bin/phpunit
+./vendor/bin/phpunit tests/unit
+./vendor/bin/phpunit tests/integration
+```
+
+### 3. Jest (JavaScript Tests)
+Frontend logic testing.
+
+```bash
+npm install
+npm test
+npm test -- --coverage
+```
+
+---
+
+## 📊 Understanding Results
+
 ```
 === TEST SUMMARY ===
-Passed:  XX ✓
-Failed:  XX ✗
-Skipped: XX ⊘
-Total:   XX
+Passed:  13 ✓  ← All tests passed
+Failed:  0 ✗   ← No failures
+Skipped: 1 ⊘   ← Optional tests skipped
+Total:   14
 ```
 
-## Exit Codes
+**Exit Code:**
+- `0` = Success ✅
+- `1` = Failure ❌
 
-- **0** = All tests passed ✓
-- **1** = One or more tests failed ✗
+---
 
-## Adding New Tests
+## 🔧 Troubleshooting
 
-To add new tests, edit `run_tests.php` and add test cases using:
+### MySQL Connection Failed
+1. Open XAMPP Control Panel
+2. Click "Start" for MySQL
+3. Run tests again
 
+### Database Not Found
+```bash
+mysql -u root < database.sql
+```
+
+### PHP Not Found  
+Update `run_tests.bat` XAMPP path to match your installation.
+
+### More Help
+See [TESTING_HOW_TO.md](../TESTING_HOW_TO.md) for detailed troubleshooting.
+
+---
+
+## 📚 Adding New Tests
+
+### PHPUnit Test Example
+File: `tests/unit/MyTest.php`
 ```php
-TestRunner::$current_test = 'Test name';
-TestRunner::assert(condition, 'Error message');
-// or
-TestRunner::assertEquals(expected, actual, 'Error message');
-// or
-TestRunner::skip('Reason for skipping');
+<?php namespace Tests\Unit;
+use PHPUnit\Framework\TestCase;
+
+class MyTest extends TestCase {
+    public function testExample() {
+        $this->assertTrue(true);
+    }
+}
 ```
 
-### Example:
-```php
-TestRunner::$current_test = 'User can login';
-TestRunner::assert($loginSuccessful, 'Login failed');
+Run it:
+```bash
+./vendor/bin/phpunit tests/unit/MyTest.php
 ```
 
-## Troubleshooting
+### Jest Test Example
+File: `tests/js/my.test.js`
+```javascript
+describe('MyModule', () => {
+    test('works', () => {
+        expect(1 + 1).toBe(2);
+    });
+});
+```
 
-### PHP Not Found
-If you get "PHP not found" error:
-1. Ensure XAMPP is installed at `C:\xampp`
-2. Or update the path in `run_tests.bat`
+Run it:
+```bash
+npm test -- my.test.js
+```
 
-### Database Connection Failed
-1. Check if MySQL is running
-2. Verify `config.php` has correct database credentials
-3. Ensure database and tables are created:
-   ```sql
-   SOURCE database.sql;
-   ```
+---
 
-### Tests Failing
-1. Run tests individually to isolate the issue
-2. Check error messages in the output
-3. Verify all required files exist in proper locations
-4. Check file permissions
+## ✅ Pre-Commit Checklist
 
-## Best Practices
+Before committing code:
+1. Run `.\run_tests.bat`
+2. All tests should pass (exit code 0)
+3. No errors in test output
+4. Fix any failing tests before commit
 
-1. **Isolation**: Each test should be independent
-2. **Clarity**: Use descriptive test names
-3. **Assertions**: Verify expected vs actual values
+---
+
+## 📖 Documentation Links
+
+| Document | Purpose |
+|----------|---------|
+| [TESTING_HOW_TO.md](../TESTING_HOW_TO.md) | Complete testing guide |
+| [QUICK_TEST_GUIDE.md](../QUICK_TEST_GUIDE.md) | 30-second quick start |
+| [README.md](./README.md) | Test structure details |
+| [README.md](../README.md) | Main project docs |
+| [phpunit.xml](../phpunit.xml) | PHPUnit config |
+| [jest.config.js](../jest.config.js) | Jest config |
 4. **Coverage**: Test both success and failure cases
 5. **Performance**: Keep tests fast (< 1 second per test)
 

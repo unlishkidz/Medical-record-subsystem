@@ -1,103 +1,305 @@
 # Testing Guide
 
-This directory contains all tests for the Medical Record System.
+This directory contains unit tests, integration tests, and frontend tests for the Medical Record System.
 
-## Structure
+---
+
+## 📁 Test Structure
 
 ```
 tests/
-├── unit/                          # Unit tests for individual components
-│   ├── PatientsApiTest.php       # Tests for patients API endpoints
-│   └── RecordsApiTest.php        # Tests for records API endpoints
-├── integration/                   # Integration tests
-│   └── DatabaseIntegrationTest.php # Tests for database operations
-├── js/                            # JavaScript/Frontend tests
-│   ├── app.test.js              # Tests for app.js frontend logic
-│   └── setup.js                 # Jest configuration setup
-├── bootstrap.php                  # PHPUnit bootstrap file
-└── README.md                      # This file
+├── unit/                              # Unit tests for API endpoints
+│   ├── PatientsApiTest.php           # Tests for patients API
+│   ├── RecordsApiTest.php            # Tests for records API
+│   └── PatientValidationTest.php     # Tests for input validation
+├── integration/                       # Integration tests
+│   ├── DatabaseConnectionTest.php    # Database connectivity tests
+│   └── DatabaseIntegrationTest.php   # Database operation tests
+├── js/                                # JavaScript/Frontend tests
+│   ├── app.test.js                  # Tests for app.js logic
+│   ├── setup.js                     # Jest configuration
+│   └── __mocks__/                   # Mock dependencies
+├── bootstrap.php                      # PHPUnit bootstrap configuration
+└── README.md                          # This file
 ```
 
-## Running Tests
+---
 
-### PHP Tests (Unit + Integration)
+## 🚀 Running Tests
 
-**Prerequisites:**
-- PHPUnit installed: `composer require --dev phpunit/phpunit`
-- Test database configured
+### Quick Start (Windows)
+```powershell
+.\run_tests.bat
+```
 
-**Run all PHP tests:**
+### PHP Unit + Integration Tests
+
+**Install PHPUnit:**
+```bash
+composer require --dev phpunit/phpunit
+```
+
+**Run All Tests:**
 ```bash
 ./vendor/bin/phpunit
 ```
 
-**Run only unit tests:**
+**Run Specific Test Suite:**
 ```bash
+# Unit tests only
 ./vendor/bin/phpunit tests/unit
-```
 
-**Run only integration tests:**
-```bash
+# Integration tests only
 ./vendor/bin/phpunit tests/integration
-```
 
-**Run specific test file:**
-```bash
+# Specific test file
 ./vendor/bin/phpunit tests/unit/PatientsApiTest.php
 ```
 
-**Generate coverage report:**
+**Generate Code Coverage:**
 ```bash
 ./vendor/bin/phpunit --coverage-html coverage/
 ```
+Open `coverage/index.html` to view coverage report.
+
+---
 
 ### JavaScript Tests
 
-**Prerequisites:**
-- Node.js and npm installed
-- Jest installed: `npm install --save-dev jest babel-jest @babel/preset-env`
+**Install Jest:**
+```bash
+npm install --save-dev jest @babel/preset-env babel-jest
+```
 
-**Run all JavaScript tests:**
+**Run All Tests:**
 ```bash
 npm test
 ```
 
-**Run tests in watch mode:**
+**Run in Watch Mode:**
 ```bash
 npm test -- --watch
 ```
 
-**Generate coverage report:**
+**Generate Coverage Report:**
 ```bash
 npm test -- --coverage
 ```
 
-**Run specific test file:**
-```bash
-npm test -- app.test.js
+---
+
+## 🧪 What Each Test Does
+
+### Unit Tests
+
+#### PatientValidationTest.php
+- Validates required fields (ID, name, DOB, contact)
+- Checks email format validation
+- Ensures phone number format compliance
+- Tests gender field constraints
+
+#### PatientsApiTest.php
+- Tests GET all patients
+- Tests GET specific patient
+- Tests POST (create) patient
+- Tests PUT (update) patient
+- Tests DELETE patient
+
+#### RecordsApiTest.php
+- Tests create medical record
+- Tests update medical record
+- Tests delete medical record
+- Tests retrieve records for patient
+
+### Integration Tests
+
+#### DatabaseConnectionTest.php
+- Verifies database connectivity
+- Tests table existence
+- Validates table structure
+- Checks for sample data
+
+#### DatabaseIntegrationTest.php
+- Tests full CRUD operations
+- Validates cascading deletes
+- Tests data persistence
+- Verifies data integrity
+
+### Frontend Tests
+
+#### app.test.js
+- Tests UI element rendering
+- Tests form submission
+- Tests data validation on client-side
+- Tests API communication
+
+---
+
+## ✅ Expected Test Results
+
+### PHP Tests (PHPUnit)
+```
+PHPUnit 9.5.x by Sebastian Bergmann
+
+✓ Database Connection Tests
+✓ Patient API Tests
+✓ Records API Tests
+✓ Validation Tests
+
+Time: 1.23 seconds
+Tests: 18, Assertions: 42, Passed ✓
 ```
 
-## Setup Instructions
+### JavaScript Tests (Jest)
+```
+PASS js/app.test.js
+  ✓ renders patient list
+  ✓ adds new patient
+  ✓ updates patient
+  ✓ deletes patient
 
-### 1. Install PHP Test Dependencies
-
-```bash
-# Install Composer (if not installed)
-# Then run:
-composer require --dev phpunit/phpunit
+Test Suites: 1 passed, 1 total
+Tests: 4 passed, 4 total
+Snapshots: 0 total
+Time: 0.456s
 ```
 
-### 2. Setup Test Database
+---
 
-Create a test database for isolated testing:
+## 🔧 Setup for Local Testing
 
+### 1. Create Test Database
 ```sql
 CREATE DATABASE patient_records_test;
 USE patient_records_test;
 SOURCE database.sql;
 ```
 
-Update `config.php` to support test database detection, or create a `config.test.php`.
+### 2. Configure Test Environment
+Create `config.test.php` or update `config.php` to detect test environment:
+```php
+$is_test = getenv('APP_ENV') === 'test';
+$db_name = $is_test ? 'patient_records_test' : 'patient_records_db';
+```
+
+### 3. Update Bootstrap
+Edit `tests/bootstrap.php` to set test database:
+```php
+putenv('APP_ENV=test');
+require_once 'config.php';
+```
+
+---
+
+## 📋 Adding New Tests
+
+### PHPUnit Example
+```php
+<?php
+namespace Tests\Unit;
+
+use PHPUnit\Framework\TestCase;
+
+class MyNewTest extends TestCase
+{
+    public function testSomething()
+    {
+        $this->assertTrue(true);
+    }
+    
+    public function testWithAssertion()
+    {
+        $expected = 10;
+        $actual = 5 + 5;
+        $this->assertEquals($expected, $actual);
+    }
+}
+```
+
+### Jest Example
+```javascript
+describe('MyComponent', () => {
+    test('renders without crashing', () => {
+        const element = document.createElement('div');
+        expect(element).toBeTruthy();
+    });
+    
+    test('handles click event', () => {
+        const handleClick = jest.fn();
+        handleClick();
+        expect(handleClick).toHaveBeenCalled();
+    });
+});
+```
+
+---
+
+## 🐛 Debugging Tests
+
+### Run Single Test
+```bash
+./vendor/bin/phpunit tests/unit/PatientsApiTest.php::testGetPatients
+```
+
+### Enable Debug Output
+```bash
+./vendor/bin/phpunit --debug tests/
+```
+
+### Check Log Files
+Tests typically log to:
+- `tests/logs/` (if created)
+- System temp directory
+- Or stdout if no log configured
+
+---
+
+## ⚠️ Common Issues & Solutions
+
+### "Class not found"
+**Issue:** Test can't find API classes
+
+**Fix:** Check `tests/bootstrap.php` includes correct paths
+
+### "Connection refused"
+**Issue:** Database not running
+
+**Fix:** Start MySQL in XAMPP Control Panel
+
+### "Access denied for user"
+**Issue:** Wrong database credentials
+
+**Fix:** Update credentials in config and bootstrap files
+
+### "Table doesn't exist"
+**Issue:** Database not initialized with schema
+
+**Fix:** Run `mysql -u root < database.sql`
+
+---
+
+## 📊 Coverage Goals
+
+Target these coverage metrics:
+- **Line Coverage:** > 80%
+- **Branch Coverage:** > 75%
+- **Function Coverage:** > 85%
+
+View coverage report:
+```bash
+./vendor/bin/phpunit --coverage-html coverage/
+open coverage/index.html
+```
+
+---
+
+## 🔗 Related Documentation
+
+- [QUICK_TEST_GUIDE.md](../QUICK_TEST_GUIDE.md) - Quick reference
+- [TESTING_HOW_TO.md](../TESTING_HOW_TO.md) - Detailed guide
+- [README.md](../README.md) - Main project documentation
+- [phpunit.xml](../phpunit.xml) - PHPUnit configuration
+- [jest.config.js](../jest.config.js) - Jest configuration
 
 ### 3. Install JavaScript Test Dependencies
 
