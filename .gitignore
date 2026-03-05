@@ -1,0 +1,39 @@
+# Node
+node_modules/
+
+# PHP
+/vendor/
+composer.lock
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs and runtime
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test/coverage
+coverage/
+.phpunit.cache/
+
+# Build
+dist/
+
+# Misc
+*.sqlite
+
+# XAMPP / local
+xampp-control.ini
+
+# Ignore sensitive files (uncomment if present)
+# config.test.php
+# .env
