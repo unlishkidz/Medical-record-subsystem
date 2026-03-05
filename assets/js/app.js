@@ -106,18 +106,8 @@ function bindSearch() {
 async function api(url, method = 'GET', body = null) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
-  
-  console.log(`[API ${method}] ${url}`, body); // Debug log
-  
-  try {
-    const res = await fetch(url, opts);
-    const data = await res.json();
-    console.log(`[API Response]`, data); // Debug log
-    return data;
-  } catch (error) {
-    console.error(`[API Error]`, error);
-    throw error;
-  }
+  const res  = await fetch(url, opts);
+  return res.json();
 }
 
 // ─── Dashboard ────────────────────────────────
@@ -300,61 +290,101 @@ function closePatientModal() {
 
 function bindForms() {
   // Patient form
-  $('#patient-form').addEventListener('submit', async e => {
+  $('#patient-form').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const fd  = new FormData(e.target);
-    const body = Object.fromEntries(fd.entries());
     
-    // Validate required fields
-    if (!body.full_name || !body.age || !body.gender || !body.contact || !body.address) {
+    // Get form data
+    const formData = new FormData(e.target);
+    const patientData = Object.fromEntries(formData.entries());
+    
+    // Basic validation
+    if (!patientData.full_name || !patientData.age || !patientData.gender || !patientData.contact || !patientData.address) {
       toast('Please fill in all required fields', 'error');
       return;
     }
-
-    let res;
-    if (state.editingPatient) {
-      res = await api(API.patients, 'PUT', { id: state.editingPatient.id, ...body });
-    } else {
-      res = await api(API.patients, 'POST', body);
-    }
-
-    if (res.success) {
-      toast(res.message);
-      closePatientModal();
-      loadPatients(state.searchQuery);
-      loadDashboard();
-    } else {
-      toast(res.message, 'error');
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    try {
+      // Send to API
+      const response = await api(API.patients, 'POST', patientData);
+      
+      if (response.success) {
+        toast('Patient added successfully!');
+        
+        // Reset form and close modal
+        e.target.reset();
+        closePatientModal();
+        
+        // Refresh data
+        loadPatients(state.searchQuery);
+        loadDashboard();
+        
+      } else {
+        toast(response.message || 'Failed to add patient', 'error');
+      }
+      
+    } catch (error) {
+      console.error('Error adding patient:', error);
+      toast('Error: ' + error.message, 'error');
+    } finally {
+      // Reset button state
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
     }
   });
 
   // Record form
-  $('#record-form').addEventListener('submit', async e => {
+  $('#record-form').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const fd   = new FormData(e.target);
-    const body = Object.fromEntries(fd.entries());
-    body.patient_id = state.currentPatient.id;
     
-    // Validate required fields
-    if (!body.visit_date || !body.diagnosis || !body.treatment || !body.doctor) {
+    // Get form data
+    const formData = new FormData(e.target);
+    const recordData = Object.fromEntries(formData.entries());
+    recordData.patient_id = state.currentPatient.id;
+    
+    // Basic validation
+    if (!recordData.visit_date || !recordData.diagnosis || !recordData.treatment || !recordData.doctor) {
       toast('Please fill in all required fields', 'error');
       return;
     }
-
-    let res;
-    if (state.editingRecord) {
-      res = await api(API.records, 'PUT', { id: state.editingRecord.id, ...body });
-    } else {
-      res = await api(API.records, 'POST', body);
-    }
-
-    if (res.success) {
-      toast(res.message);
-      closeRecordModal();
-      loadPatientRecords(state.currentPatient.id);
-      loadDashboard();
-    } else {
-      toast(res.message, 'error');
+    
+    // Show loading state
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    try {
+      // Send to API
+      const response = await api(API.records, 'POST', recordData);
+      
+      if (response.success) {
+        toast('Medical record added successfully!');
+        
+        // Reset form and close modal
+        e.target.reset();
+        closeRecordModal();
+        
+        // Refresh data
+        loadPatientRecords(state.currentPatient.id);
+        loadDashboard();
+        
+      } else {
+        toast(response.message || 'Failed to add record', 'error');
+      }
+      
+    } catch (error) {
+      console.error('Error adding record:', error);
+      toast('Error: ' + error.message, 'error');
+    } finally {
+      // Reset button state
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
     }
   });
 }

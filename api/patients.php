@@ -68,60 +68,66 @@ switch ($method) {
 
     // ── POST: Add new patient ─────────────────────────────────────────────
     case 'POST':
-        $input = file_get_contents('php://input');
-        error_log('POST Input: ' . $input); // Debug log
-        
-        $data = json_decode($input, true);
+        // Get JSON data from request
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
         
         if (!$data) {
-            jsonResponse(false, 'Invalid JSON data');
+            jsonResponse(false, 'Invalid JSON data received');
         }
-
-        error_log('Decoded data: ' . json_encode($data)); // Debug log
-
-        $required = ['full_name', 'age', 'gender', 'contact', 'address'];
-        foreach ($required as $field) {
-            if (!isset($data[$field]) || $data[$field] === '') {
-                jsonResponse(false, "Field '$field' is required.");
+        
+        // Validate required fields
+        $required_fields = ['full_name', 'age', 'gender', 'contact', 'address'];
+        foreach ($required_fields as $field) {
+            if (empty($data[$field])) {
+                jsonResponse(false, "Field '$field' is required");
             }
         }
-
-        // Auto-generate patient ID
-        $row   = $conn->query("SELECT MAX(id) AS max_id FROM patients")->fetch_assoc();
-        $nextId = ($row['max_id'] ?? 0) + 1;
-        $pid   = 'P-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
-
-        // Check duplicate
-        $check = $conn->prepare("SELECT id FROM patients WHERE patient_id = ?");
-        $check->bind_param('s', $pid);
-        $check->execute();
-        if ($check->get_result()->num_rows > 0) jsonResponse(false, 'Patient ID already exists.');
-
+        
+        // Validate age
+        $age = (int)$data['age'];
+        if ($age < 1 || $age > 150) {
+            jsonResponse(false, 'Age must be between 1 and 150');
+        }
+        
+        // Validate gender
+        $valid_genders = ['Male', 'Female', 'Other'];
+        if (!in_array($data['gender'], $valid_genders)) {
+            jsonResponse(false, 'Invalid gender selected');
+        }
+        
+        // Generate unique patient ID
+        $result = $conn->query("SELECT COUNT(*) as count FROM patients");
+        $count = $result->fetch_assoc()['count'] + 1;
+        $patient_id = 'P-' . date('Y') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+        
+        // Prepare data for insertion
+        $full_name = trim($data['full_name']);
+        $blood_type = $data['blood_type'] ?? 'Unknown';
+        $contact = trim($data['contact']);
+        $address = trim($data['address']);
+        
+        // Insert patient
         $stmt = $conn->prepare(
-            "INSERT INTO patients (patient_id, full_name, age, gender, blood_type, contact, address)
+            "INSERT INTO patients (patient_id, full_name, age, gender, blood_type, contact, address) 
              VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         
         if (!$stmt) {
-            jsonResponse(false, 'Prepare failed: ' . $conn->error);
+            jsonResponse(false, 'Database error: ' . $conn->error);
         }
         
-        $name    = $data['full_name'];
-        $age     = (int) $data['age'];
-        $gender  = $data['gender'];
-        $blood   = $data['blood_type'] ?? 'Unknown';
-        $contact = $data['contact'];
-        $address = $data['address'];
+        $stmt->bind_param('ssissss', $patient_id, $full_name, $age, $data['gender'], $blood_type, $contact, $address);
         
-        error_log("Binding: pid=$pid, name=$name, age=$age, gender=$gender, blood=$blood, contact=$contact, address=$address"); // Debug log
-        
-        $stmt->bind_param('ssissss', $pid, $name, $age, $gender, $blood, $contact, $address);
-
         if ($stmt->execute()) {
-            jsonResponse(true, 'Patient added successfully.', ['patient_id' => $pid]);
+            jsonResponse(true, 'Patient added successfully', [
+                'patient_id' => $patient_id,
+                'id' => $conn->insert_id
+            ]);
         } else {
             jsonResponse(false, 'Failed to add patient: ' . $stmt->error);
         }
+        
         $stmt->close();
         break;
 

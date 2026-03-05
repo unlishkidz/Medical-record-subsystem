@@ -33,46 +33,58 @@ switch ($method) {
 
     // ── POST: Add medical record ──────────────────────────────────────────
     case 'POST':
-        $input = file_get_contents('php://input');
-        error_log('POST Input: ' . $input); // Debug log
-        
-        $data = json_decode($input, true);
+        // Get JSON data from request
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
         
         if (!$data) {
-            jsonResponse(false, 'Invalid JSON data');
+            jsonResponse(false, 'Invalid JSON data received');
         }
-
-        $required = ['patient_id', 'visit_date', 'diagnosis', 'treatment', 'doctor'];
-        foreach ($required as $field) {
-            if (!isset($data[$field]) || $data[$field] === '') {
-                jsonResponse(false, "Field '$field' is required.");
+        
+        // Validate required fields
+        $required_fields = ['patient_id', 'visit_date', 'diagnosis', 'treatment', 'doctor'];
+        foreach ($required_fields as $field) {
+            if (empty($data[$field])) {
+                jsonResponse(false, "Field '$field' is required");
             }
         }
-
-        $row    = $conn->query("SELECT MAX(id) AS max_id FROM medical_records")->fetch_assoc();
-        $nextId = ($row['max_id'] ?? 0) + 1;
-        $rid    = 'R-' . date('Y') . '-' . str_pad($nextId, 3, '0', STR_PAD_LEFT);
-
-        $pid        = (int) $data['patient_id'];
+        
+        // Generate unique record ID
+        $result = $conn->query("SELECT COUNT(*) as count FROM medical_records");
+        $count = $result->fetch_assoc()['count'] + 1;
+        $record_id = 'R-' . date('Y') . '-' . str_pad($count, 3, '0', STR_PAD_LEFT);
+        
+        // Prepare data for insertion
+        $patient_id = (int)$data['patient_id'];
         $visit_date = $data['visit_date'];
-        $diagnosis  = $data['diagnosis'];
-        $treatment  = $data['treatment'];
-        $doctor     = $data['doctor'];
-        $notes      = $data['notes'] ?? '';
-
+        $diagnosis = trim($data['diagnosis']);
+        $treatment = trim($data['treatment']);
+        $doctor = trim($data['doctor']);
+        $notes = isset($data['notes']) ? trim($data['notes']) : '';
+        
+        // Insert record
         $stmt = $conn->prepare(
-            "INSERT INTO medical_records (record_id, patient_id, visit_date, diagnosis, treatment, doctor, notes)
+            "INSERT INTO medical_records (record_id, patient_id, visit_date, diagnosis, treatment, doctor, notes) 
              VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         
         if (!$stmt) {
-            jsonResponse(false, 'Prepare failed: ' . $conn->error);
+            jsonResponse(false, 'Database error: ' . $conn->error);
         }
         
-        $stmt->bind_param('sisssss', $rid, $pid, $visit_date, $diagnosis, $treatment, $doctor, $notes);
-
-        if ($stmt->execute()) jsonResponse(true, 'Medical record added.', ['record_id' => $rid]);
-        jsonResponse(false, 'Failed to add record: ' . $stmt->error);
+        $stmt->bind_param('sisssss', $record_id, $patient_id, $visit_date, $diagnosis, $treatment, $doctor, $notes);
+        
+        if ($stmt->execute()) {
+            jsonResponse(true, 'Medical record added successfully', [
+                'record_id' => $record_id,
+                'id' => $conn->insert_id
+            ]);
+        } else {
+            jsonResponse(false, 'Failed to add record: ' . $stmt->error);
+        }
+        
+        $stmt->close();
+        break;
         break;
 
     // ── PUT: Update medical record ────────────────────────────────────────
