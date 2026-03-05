@@ -284,11 +284,11 @@
             <input type="text" name="address" placeholder="e.g. Molo, Iloilo City" required>
           </div>
         </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+          <button type="button" class="btn btn-ghost" onclick="closePatientModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Patient</button>
+        </div>
       </form>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closePatientModal()">Cancel</button>
-      <button type="submit" class="btn btn-primary">Save Patient</button>
     </div>
   </div>
 </div>
@@ -326,11 +326,11 @@
             <textarea name="notes" placeholder="Additional observations, follow-up instructions…"></textarea>
           </div>
         </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">
+          <button type="button" class="btn btn-ghost" onclick="closeRecordModal()">Cancel</button>
+          <button type="submit" class="btn btn-accent">Save Record</button>
+        </div>
       </form>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeRecordModal()">Cancel</button>
-      <button type="submit" class="btn btn-accent">Save Record</button>
     </div>
   </div>
 </div>
