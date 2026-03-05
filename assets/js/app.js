@@ -106,8 +106,18 @@ function bindSearch() {
 async function api(url, method = 'GET', body = null) {
   const opts = { method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
-  const res  = await fetch(url, opts);
-  return res.json();
+  
+  console.log(`[API ${method}] ${url}`, body); // Debug log
+  
+  try {
+    const res = await fetch(url, opts);
+    const data = await res.json();
+    console.log(`[API Response]`, data); // Debug log
+    return data;
+  } catch (error) {
+    console.error(`[API Error]`, error);
+    throw error;
+  }
 }
 
 // ─── Dashboard ────────────────────────────────
@@ -288,12 +298,27 @@ function closePatientModal() {
   $('#patient-modal').classList.remove('open');
 }
 
-function bindForms() {
-  // Patient form
-  $('#patient-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const fd  = new FormData(e.target);
+async function submitPatientForm() {
+  const btn = $('#patient-submit-btn');
+  const form = $('#patient-form');
+  
+  if (btn.disabled) return; // Prevent double submission
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  
+  try {
+    const fd  = new FormData(form);
     const body = Object.fromEntries(fd.entries());
+    
+    console.log('Form data:', body); // Debug log
+    
+    // Validate required fields
+    if (!body.full_name || !body.age || !body.gender || !body.contact || !body.address) {
+      toast('Please fill in all required fields', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Save Patient';
+      return;
+    }
 
     let res;
     if (state.editingPatient) {
@@ -309,13 +334,27 @@ function bindForms() {
       loadDashboard();
     } else {
       toast(res.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Save Patient';
     }
-  });
+  } catch (e) {
+    console.error('Submit error:', e);
+    toast('Error: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Save Patient';
+  }
+}
 
-  // Record form
-  $('#record-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const fd   = new FormData(e.target);
+async function submitRecordForm() {
+  const btn = $('#record-submit-btn');
+  const form = $('#record-form');
+  
+  if (btn.disabled) return; // Prevent double submission
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  
+  try {
+    const fd   = new FormData(form);
     const body = Object.fromEntries(fd.entries());
     body.patient_id = state.currentPatient.id;
 
@@ -333,8 +372,19 @@ function bindForms() {
       loadDashboard();
     } else {
       toast(res.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Save Record';
     }
-  });
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = 'Save Record';
+  }
+}
+
+function bindForms() {
+  // Form submission is now handled directly by submitPatientForm() and submitRecordForm()
+  // This function can be kept for future form-related bindings if needed
 }
 
 function deletePatient(id, name) {

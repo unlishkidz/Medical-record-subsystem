@@ -68,11 +68,22 @@ switch ($method) {
 
     // ── POST: Add new patient ─────────────────────────────────────────────
     case 'POST':
-        $data = json_decode(file_get_contents('php://input'), true);
+        $input = file_get_contents('php://input');
+        error_log('POST Input: ' . $input); // Debug log
+        
+        $data = json_decode($input, true);
+        
+        if (!$data) {
+            jsonResponse(false, 'Invalid JSON data');
+        }
+
+        error_log('Decoded data: ' . json_encode($data)); // Debug log
 
         $required = ['full_name', 'age', 'gender', 'contact', 'address'];
         foreach ($required as $field) {
-            if (empty($data[$field])) jsonResponse(false, "Field '$field' is required.");
+            if (!isset($data[$field]) || $data[$field] === '') {
+                jsonResponse(false, "Field '$field' is required.");
+            }
         }
 
         // Auto-generate patient ID
@@ -91,6 +102,10 @@ switch ($method) {
              VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
         
+        if (!$stmt) {
+            jsonResponse(false, 'Prepare failed: ' . $conn->error);
+        }
+        
         $name    = $data['full_name'];
         $age     = (int) $data['age'];
         $gender  = $data['gender'];
@@ -98,12 +113,14 @@ switch ($method) {
         $contact = $data['contact'];
         $address = $data['address'];
         
+        error_log("Binding: pid=$pid, name=$name, age=$age, gender=$gender, blood=$blood, contact=$contact, address=$address"); // Debug log
+        
         $stmt->bind_param('ssissss', $pid, $name, $age, $gender, $blood, $contact, $address);
 
         if ($stmt->execute()) {
             jsonResponse(true, 'Patient added successfully.', ['patient_id' => $pid]);
         } else {
-            jsonResponse(false, 'Failed to add patient: ' . $conn->error);
+            jsonResponse(false, 'Failed to add patient: ' . $stmt->error);
         }
         $stmt->close();
         break;
