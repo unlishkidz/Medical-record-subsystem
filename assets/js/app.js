@@ -298,25 +298,16 @@ function closePatientModal() {
   $('#patient-modal').classList.remove('open');
 }
 
-async function submitPatientForm() {
-  const btn = $('#patient-submit-btn');
-  const form = $('#patient-form');
-  
-  if (btn.disabled) return; // Prevent double submission
-  btn.disabled = true;
-  btn.textContent = 'Saving...';
-  
-  try {
-    const fd  = new FormData(form);
+function bindForms() {
+  // Patient form
+  $('#patient-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd  = new FormData(e.target);
     const body = Object.fromEntries(fd.entries());
-    
-    console.log('Form data:', body); // Debug log
     
     // Validate required fields
     if (!body.full_name || !body.age || !body.gender || !body.contact || !body.address) {
       toast('Please fill in all required fields', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Save Patient';
       return;
     }
 
@@ -334,37 +325,19 @@ async function submitPatientForm() {
       loadDashboard();
     } else {
       toast(res.message, 'error');
-      btn.disabled = false;
-      btn.textContent = 'Save Patient';
     }
-  } catch (e) {
-    console.error('Submit error:', e);
-    toast('Error: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.textContent = 'Save Patient';
-  }
-}
+  });
 
-async function submitRecordForm() {
-  const btn = $('#record-submit-btn');
-  const form = $('#record-form');
-  
-  if (btn.disabled) return; // Prevent double submission
-  btn.disabled = true;
-  btn.textContent = 'Saving...';
-  
-  try {
-    const fd   = new FormData(form);
+  // Record form
+  $('#record-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd   = new FormData(e.target);
     const body = Object.fromEntries(fd.entries());
     body.patient_id = state.currentPatient.id;
-    
-    console.log('Record form data:', body); // Debug log
     
     // Validate required fields
     if (!body.visit_date || !body.diagnosis || !body.treatment || !body.doctor) {
       toast('Please fill in all required fields', 'error');
-      btn.disabled = false;
-      btn.textContent = 'Save Record';
       return;
     }
 
@@ -382,20 +355,8 @@ async function submitRecordForm() {
       loadDashboard();
     } else {
       toast(res.message, 'error');
-      btn.disabled = false;
-      btn.textContent = 'Save Record';
     }
-  } catch (e) {
-    console.error('Submit error:', e);
-    toast('Error: ' + e.message, 'error');
-    btn.disabled = false;
-    btn.textContent = 'Save Record';
-  }
-}
-
-function bindForms() {
-  // Form submission is now handled directly by submitPatientForm() and submitRecordForm()
-  // This function can be kept for future form-related bindings if needed
+  });
 }
 
 function deletePatient(id, name) {

@@ -288,7 +288,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closePatientModal()">Cancel</button>
-      <button type="button" class="btn btn-primary" id="patient-submit-btn" onclick="submitPatientForm()">Save Patient</button>
+      <button type="submit" class="btn btn-primary">Save Patient</button>
     </div>
   </div>
 </div>
@@ -330,7 +330,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeRecordModal()">Cancel</button>
-      <button type="button" class="btn btn-accent" id="record-submit-btn" onclick="submitRecordForm()">Save Record</button>
+      <button type="submit" class="btn btn-accent">Save Record</button>
     </div>
   </div>
 </div>
