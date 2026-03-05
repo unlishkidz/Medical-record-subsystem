@@ -33,11 +33,20 @@ switch ($method) {
 
     // ── POST: Add medical record ──────────────────────────────────────────
     case 'POST':
-        $data = json_decode(file_get_contents('php://input'), true);
+        $input = file_get_contents('php://input');
+        error_log('POST Input: ' . $input); // Debug log
+        
+        $data = json_decode($input, true);
+        
+        if (!$data) {
+            jsonResponse(false, 'Invalid JSON data');
+        }
 
         $required = ['patient_id', 'visit_date', 'diagnosis', 'treatment', 'doctor'];
         foreach ($required as $field) {
-            if (empty($data[$field])) jsonResponse(false, "Field '$field' is required.");
+            if (!isset($data[$field]) || $data[$field] === '') {
+                jsonResponse(false, "Field '$field' is required.");
+            }
         }
 
         $row    = $conn->query("SELECT MAX(id) AS max_id FROM medical_records")->fetch_assoc();
@@ -55,10 +64,15 @@ switch ($method) {
             "INSERT INTO medical_records (record_id, patient_id, visit_date, diagnosis, treatment, doctor, notes)
              VALUES (?, ?, ?, ?, ?, ?, ?)"
         );
+        
+        if (!$stmt) {
+            jsonResponse(false, 'Prepare failed: ' . $conn->error);
+        }
+        
         $stmt->bind_param('sisssss', $rid, $pid, $visit_date, $diagnosis, $treatment, $doctor, $notes);
 
         if ($stmt->execute()) jsonResponse(true, 'Medical record added.', ['record_id' => $rid]);
-        jsonResponse(false, 'Failed to add record: ' . $conn->error);
+        jsonResponse(false, 'Failed to add record: ' . $stmt->error);
         break;
 
     // ── PUT: Update medical record ────────────────────────────────────────

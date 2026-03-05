@@ -357,6 +357,16 @@ async function submitRecordForm() {
     const fd   = new FormData(form);
     const body = Object.fromEntries(fd.entries());
     body.patient_id = state.currentPatient.id;
+    
+    console.log('Record form data:', body); // Debug log
+    
+    // Validate required fields
+    if (!body.visit_date || !body.diagnosis || !body.treatment || !body.doctor) {
+      toast('Please fill in all required fields', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Save Record';
+      return;
+    }
 
     let res;
     if (state.editingRecord) {
@@ -376,6 +386,7 @@ async function submitRecordForm() {
       btn.textContent = 'Save Record';
     }
   } catch (e) {
+    console.error('Submit error:', e);
     toast('Error: ' + e.message, 'error');
     btn.disabled = false;
     btn.textContent = 'Save Record';
